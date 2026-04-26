@@ -6,7 +6,7 @@
     <title>RI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after {
             margin: 0;
@@ -14,50 +14,394 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --green: #00ff88;
+            --green-dim: #00cc66;
+            --green-glow: rgba(0, 255, 136, 0.15);
+            --red: #ff3333;
+            --amber: #ffaa00;
+            --bg: #020a04;
+            --panel: #050f07;
+            --border: rgba(0, 255, 136, 0.25);
+            --text: #b0ffcc;
+            --text-dim: #4a9960;
+        }
+
         body {
             min-height: 100vh;
-            width: 100vw;
-            background-color: black;
-            color: aliceblue;
-            font-family: "Courier Prime", monospace;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: "Share Tech Mono", monospace;
             padding: 2rem;
-            font-size: 1.2rem;
-            line-height: 1.6;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Scanline overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.15) 2px,
+                rgba(0,0,0,0.15) 4px
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* CRT vignette */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+            pointer-events: none;
+            z-index: 998;
         }
 
         #typedtext {
             white-space: pre-wrap;
+            font-family: "Orbitron", monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--green);
+            text-shadow: 0 0 8px var(--green), 0 0 20px rgba(0,255,136,0.4);
+            letter-spacing: 0.15em;
+            margin-bottom: 1.5rem;
+            min-height: 1.4em;
+            animation: flicker 8s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 96%, 100% { opacity: 1; }
+            97% { opacity: 0.85; }
+            98% { opacity: 1; }
+            99% { opacity: 0.9; }
+        }
+
+        #textbox {
+            max-width: 720px;
+            margin: 0 auto;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            position: relative;
+            box-shadow: 0 0 30px rgba(0,255,136,0.05), inset 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        /* Corner decorations */
+        #textbox::before, #textbox::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-color: var(--green);
+            border-style: solid;
+        }
+        #textbox::before {
+            top: -1px; left: -1px;
+            border-width: 2px 0 0 2px;
+        }
+        #textbox::after {
+            bottom: -1px; right: -1px;
+            border-width: 0 2px 2px 0;
+        }
+
+        /* Top bar */
+        .topbar {
+            background: rgba(0,255,136,0.06);
+            border-bottom: 1px solid var(--border);
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: "Orbitron", monospace;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            color: var(--green-dim);
+        }
+
+        .topbar-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--green); }
+            50% { opacity: 0.4; box-shadow: 0 0 3px var(--green); }
+        }
+
+        .topbar-spacer { flex: 1; }
+
+        .cl-badge {
+            color: var(--red);
+            text-shadow: 0 0 8px var(--red);
+            border: 1px solid rgba(255,51,51,0.4);
+            padding: 0.15rem 0.5rem;
+            font-size: 0.55rem;
+        }
+
+        #header {
+            padding: 1.5rem 2rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-line {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.88rem;
+        }
+
+        .header-label {
+            color: var(--text-dim);
+            min-width: 80px;
+        }
+
+        .header-value {
+            color: var(--text);
+            text-shadow: 0 0 6px rgba(0,255,136,0.3);
+        }
+
+        .redacted {
+            background: var(--text);
+            color: var(--panel);
+            padding: 0 0.3em;
+            font-weight: bold;
+            user-select: none;
+            letter-spacing: 0.05em;
+        }
+
+        .clearance {
+            color: var(--amber);
+            text-shadow: 0 0 8px rgba(255,170,0,0.5);
+            border: 1px solid rgba(255,170,0,0.3);
+            display: inline-block;
+            padding: 0 0.4em;
+        }
+
+        #body {
+            padding: 1.5rem 2rem;
+            color: var(--text);
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .report-header {
+            color: var(--green);
+            text-shadow: 0 0 10px var(--green);
+            font-family: "Orbitron", monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            margin-bottom: 1.2rem;
+        }
+
+        .report-text {
+            color: var(--text);
+            opacity: 0.85;
+            margin-bottom: 1.2rem;
+        }
+
+        .transmission-box {
+            margin: 1.5rem 0;
+            border: 1px solid rgba(0,255,136,0.2);
+            background: rgba(0,255,136,0.03);
+            padding: 1rem 1.5rem;
+            position: relative;
+        }
+
+        .transmission-box::before {
+            content: 'INTERCEPTED SEQUENCE';
+            position: absolute;
+            top: -0.6em;
+            left: 1rem;
+            background: var(--panel);
+            padding: 0 0.5rem;
+            font-family: "Orbitron", monospace;
+            font-size: 0.5rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            color: var(--text-dim);
+        }
+
+        .transmission-numbers {
+            font-family: "Orbitron", monospace;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--green);
+            text-shadow: 0 0 15px var(--green), 0 0 30px rgba(0,255,136,0.3);
+            letter-spacing: 0.15em;
+            text-align: center;
+            padding: 0.5rem 0;
+            animation: glitch 6s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% { 
+                text-shadow: 0 0 15px var(--green), 0 0 30px rgba(0,255,136,0.3);
+                transform: none;
+            }
+            91% { transform: translateX(-2px); text-shadow: 2px 0 var(--red), -2px 0 cyan; }
+            92% { transform: translateX(2px); text-shadow: -2px 0 var(--red), 2px 0 cyan; }
+            93% { transform: none; }
+        }
+
+        #answerBox {
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .input-label {
+            font-family: "Orbitron", monospace;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+
+        #answerBox input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--green);
+            color: var(--green);
+            font-family: "Orbitron", monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            padding: 0.4rem 0.2rem;
+            outline: none;
+            text-transform: uppercase;
+            caret-color: var(--green);
+            text-shadow: 0 0 8px var(--green);
+            box-shadow: 0 2px 0 rgba(0,255,136,0.1);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        #answerBox input:focus {
+            border-bottom-color: var(--green);
+            box-shadow: 0 2px 10px rgba(0,255,136,0.2);
+        }
+
+        #answerBox input.denied {
+            border-bottom-color: var(--red);
+            color: var(--red);
+            text-shadow: 0 0 8px var(--red);
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        #answerBox input::placeholder {
+            color: var(--text-dim);
+            opacity: 0.5;
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+        }
+
+        .submit-btn {
+            font-family: "Orbitron", monospace;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--green);
+            background: transparent;
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: rgba(0,255,136,0.1);
+            border-color: var(--green);
+            box-shadow: 0 0 12px rgba(0,255,136,0.2);
+        }
+
+        /* Bottom corner deco */
+        .corner-bl, .corner-tr {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-color: var(--green);
+            border-style: solid;
+            opacity: 0.5;
+        }
+        .corner-bl {
+            bottom: -1px; left: -1px;
+            border-width: 0 0 2px 2px;
+        }
+        .corner-tr {
+            top: -1px; right: -1px;
+            border-width: 2px 2px 0 0;
         }
     </style>
 </head>
 <body>
-   <!---<div id="typedtext">
-    </div>-->
-    <div> 
-        <p>The game is over. Thanks for playing.</p>
-        <br>
-        <p>-Commander Holt</p>
-    
+    <div id="typedtext"></div>
+
+    <div id="textbox">
+        <div class="corner-bl"></div>
+        <div class="corner-tr"></div>
+
+        <div class="topbar">
+            <div class="topbar-dot"></div>
+            REPUBLIC INTELLIGENCE — SECURE CHANNEL
+            <div class="topbar-spacer"></div>
+            <span class="cl-badge">CLASSIFIED</span>
+        </div>
+
+        <div id="header">
+            <div class="header-line">
+                <span class="header-label">TO:</span>
+                <span class="header-value">Deputy Director 'Spark'</span>
+            </div>
+            <div class="header-line">
+                <span class="header-label">FROM:</span>
+                <span class="header-value">AGT. <span class="redacted">■■■■■■■■</span></span>
+            </div>
+            <div class="header-line">
+                <span class="header-label">CLEARANCE:</span>
+                <span class="clearance">CL-1</span>
+            </div>
+        </div>
+
+        <div id="body">
+            <div class="report-header">&lt;:: OPEN REPORT ::&gt;</div>
+            <p class="report-text">We've intercepted encrypted transmissions from an unknown source within the Coruscant System. We believe one of our own may be feeding fleet routes to the Confederacy.</p>
+            <p class="report-text">The transmission repeats these key numbers:</p>
+            <div class="transmission-box">
+                <div class="transmission-numbers">3-15-18-21 / 19-11-5-25</div>
+            </div>
+        </div>
+
+        <div id="answerBox">
+            <span class="input-label">DECRYPT &gt;</span>
+            <input id="decryptInput" type="text" placeholder="ENTER DECRYPTION KEY" autocomplete="off" spellcheck="false">
+            <button class="submit-btn" onclick="checkAnswer()">SUBMIT</button>
+        </div>
     </div>
 
     <script>
-        /*AGENT. If you're reading this, then you are the only one
-        //capable of decrypting the transmission.  Please, act quickly.
-         The fate of the republic lies with you...
-         Start here:   
-         aHR0cHM6Ly9wYXN0ZWJpbi5jb20vRUw3QWtzQVM=
-        */
-
-        var aText = new Array(
-            "Finding network...",
-            "Incoming Transmission", 
-            "Network established...",
-            "Decrypting...",
-            "",
-            "Message unable to fully dercypt",
-            "Error code: 064"
-        );
-        var iSpeed = 50;
+        var aText = ["INTERCEPTING TRANSMISSION..."];
+        var iSpeed = 60;
         var iIndex = 0;
         var iArrLength = aText[0].length;
         var iScrollAt = 20;
@@ -73,14 +417,16 @@
             while (iRow < iIndex) {
                 sContents += aText[iRow++] + '<br />';
             }
-            destination.innerHTML = sContents + aText[iIndex].substring(0, iTextPos) + "_";
-            
+            destination.innerHTML = sContents + aText[iIndex].substring(0, iTextPos) + '<span style="animation:pulse 1s infinite;display:inline-block;width:8px;height:1em;background:var(--green);vertical-align:text-bottom;margin-left:2px"></span>';
+
             if (iTextPos++ == iArrLength) {
                 iTextPos = 0;
                 iIndex++;
                 if (iIndex != aText.length) {
                     iArrLength = aText[iIndex].length;
                     setTimeout(typewriter, 500);
+                } else {
+                    destination.innerHTML = sContents.replace(/^ /, '') + aText[aText.length-1];
                 }
             } else {
                 setTimeout(typewriter, iSpeed);
@@ -88,6 +434,32 @@
         }
 
         typewriter();
+
+        async function sha256(str) {
+            const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+
+        async function checkAnswer() {
+            var input = document.getElementById("decryptInput");
+            var value = input.value.trim().toUpperCase();
+            var hash = await sha256(value);
+            if (hash === "76fe66dda17e02e42bfe2cb991460e55cfbdf802be2e8857043482d2bba063bb") {
+                window.location.href = atob("c2VjcmV0Lmh0bWw=");
+            } else {
+                input.classList.add("denied");
+                input.value = "";
+                input.placeholder = "ACCESS DENIED — RETRY";
+                setTimeout(function() {
+                    input.classList.remove("denied");
+                    input.placeholder = "ENTER DECRYPTION KEY";
+                }, 1500);
+            }
+        }
+
+        document.getElementById("decryptInput").addEventListener("keydown", function(e) {
+            if (e.key === "Enter") checkAnswer();
+        });
     </script>
 </body>
 </html>

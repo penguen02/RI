@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RI — TRIAL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --green: #00ff88;
+            --green-dim: #00cc66;
+            --red: #ff3333;
+            --amber: #ffaa00;
+            --purple: #cc88ff;
+            --bg: #020a04;
+            --panel: #050f07;
+            --border: rgba(0, 255, 136, 0.25);
+            --text: #b0ffcc;
+            --text-dim: #4a9960;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: "Share Tech Mono", monospace;
+            padding: 2rem;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Scanlines */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.12) 2px,
+                rgba(0,0,0,0.12) 4px
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Vignette */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.75) 100%);
+            pointer-events: none;
+            z-index: 998;
+        }
+
+        .page-wrap {
+            max-width: 700px;
+            width: 100%;
+        }
+
+        /* Boot lines */
+        #bootText {
+            font-family: "Share Tech Mono", monospace;
+            font-size: 0.8rem;
+            color: var(--green-dim);
+            margin-bottom: 2rem;
+        }
+
+        .boot-line {
+            display: block;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        .boot-line.show {
+            opacity: 1;
+            transform: none;
+        }
+
+        .boot-ok   { color: var(--green); }
+        .boot-warn { color: var(--amber); }
+        .boot-pur  { color: var(--purple); }
+
+        /* Main panel */
+        .trial-panel {
+            border: 1px solid var(--border);
+            background: var(--panel);
+            position: relative;
+            box-shadow: 0 0 40px rgba(0,255,136,0.04), inset 0 0 40px rgba(0,0,0,0.4);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        .trial-panel.visible { opacity: 1; }
+
+        .corner { position: absolute; width: 14px; height: 14px; border-color: var(--green); border-style: solid; }
+        .c-tl { top: -1px; left: -1px;   border-width: 2px 0 0 2px; }
+        .c-tr { top: -1px; right: -1px;  border-width: 2px 2px 0 0; opacity: 0.5; }
+        .c-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+        .c-bl { bottom: -1px; left: -1px;  border-width: 0 0 2px 2px; opacity: 0.5; }
+
+        /* Topbar */
+        .topbar {
+            background: rgba(0,255,136,0.06);
+            border-bottom: 1px solid var(--border);
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: "Orbitron", monospace;
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            color: var(--text-dim);
+        }
+
+        .topbar-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--amber);
+            box-shadow: 0 0 8px var(--amber);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .topbar-spacer { flex: 1; }
+
+        .trial-badge {
+            color: var(--amber);
+            text-shadow: 0 0 8px rgba(255,170,0,0.5);
+            border: 1px solid rgba(255,170,0,0.3);
+            padding: 0.15rem 0.5rem;
+            font-size: 0.5rem;
+        }
+
+        /* Message body */
+        .message-section {
+            padding: 1.8rem 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-label {
+            font-family: "Orbitron", monospace;
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            color: var(--text-dim);
+            margin-bottom: 1.2rem;
+        }
+
+        .message-text {
+            font-size: 0.9rem;
+            color: var(--text);
+            opacity: 0.85;
+            margin-bottom: 1rem;
+        }
+
+        .message-text .highlight {
+            color: var(--amber);
+            text-shadow: 0 0 8px rgba(255,170,0,0.4);
+        }
+
+        .message-text .code-word {
+            color: var(--purple);
+            text-shadow: 0 0 10px rgba(204,136,255,0.5);
+            font-family: "Orbitron", monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            border: 1px solid rgba(204,136,255,0.2);
+            padding: 0 0.4em;
+        }
+
+        /* Divider */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 1.2rem 0;
+            opacity: 0.4;
+        }
+
+        .retrace-box {
+            border: 1px solid rgba(255,170,0,0.2);
+            background: rgba(255,170,0,0.03);
+            padding: 1rem 1.5rem;
+            position: relative;
+            margin-top: 1.2rem;
+        }
+
+        .retrace-box::before {
+            content: 'DIRECTIVE';
+            position: absolute;
+            top: -0.6em;
+            left: 1rem;
+            background: var(--panel);
+            padding: 0 0.5rem;
+            font-family: "Orbitron", monospace;
+            font-size: 0.45rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            color: rgba(255,170,0,0.6);
+        }
+
+        .retrace-text {
+            font-size: 0.88rem;
+            color: var(--text);
+            opacity: 0.8;
+        }
+
+        /* Input section */
+        .input-section {
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .input-prompt {
+            font-family: "Orbitron", monospace;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+
+        #codeInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--green);
+            color: var(--green);
+            font-family: "Orbitron", monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            padding: 0.4rem 0.2rem;
+            outline: none;
+            text-transform: uppercase;
+            caret-color: var(--green);
+            text-shadow: 0 0 8px var(--green);
+            transition: all 0.2s;
+        }
+
+        #codeInput.denied {
+            border-bottom-color: var(--red);
+            color: var(--red);
+            text-shadow: 0 0 8px var(--red);
+            animation: shake 0.35s ease;
+        }
+
+        #codeInput::placeholder {
+            color: var(--text-dim);
+            opacity: 0.4;
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+        }
+
+        .submit-btn {
+            font-family: "Orbitron", monospace;
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--green);
+            background: transparent;
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .submit-btn:hover {
+            background: rgba(0,255,136,0.1);
+            border-color: var(--green);
+            box-shadow: 0 0 12px rgba(0,255,136,0.2);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        @keyframes flicker {
+            0%, 96%, 100% { opacity: 1; }
+            97% { opacity: 0.4; }
+            99% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrap">
+
+        <div id="bootText">
+            <span class="boot-line">[ RIB ] Verifying agent identity...</span>
+            <span class="boot-line boot-ok">[ OK  ] Agent Hippopo Amphi — confirmed traitor.</span>
+            <span class="boot-line boot-warn">[ WARN ] Operation handoff initiated.</span>
+            <span class="boot-line boot-pur">[ SYS ] Loading trial directive...</span>
+        </div>
+
+        <div class="trial-panel" id="trialPanel">
+            <div class="corner c-tl"></div>
+            <div class="corner c-tr"></div>
+            <div class="corner c-br"></div>
+            <div class="corner c-bl"></div>
+
+            <div class="topbar">
+                <div class="topbar-dot"></div>
+                REPUBLIC INTELLIGENCE BUREAU — TRIAL DIRECTIVE
+                <div class="topbar-spacer"></div>
+                <span class="trial-badge">RESTRICTED</span>
+            </div>
+
+            <div class="message-section">
+                <div class="section-label">⬡ TRANSMISSION — DEPUTY DIRECTOR 'SPARK'</div>
+
+                <p class="message-text">Good work, agent. The name has been logged and the arrest warrant is being processed.</p>
+                <p class="message-text">However, we're not done yet. <span class="highlight">Amphi didn't act alone.</span> Intelligence suggests the operation runs deeper — files were moved, routes were leaked, and someone higher up gave the order.</p>
+
+                <hr class="divider">
+
+                <p class="message-text">To proceed, you must <span class="highlight">retrace your steps</span>. Every answer you've uncovered so far has left a trail. Find what connects them — the path back to the source will reveal itself.</p>
+
+                <div class="retrace-box">
+                    <p class="retrace-text">When you've found it, enter the operation codeword below. It's one word. You already know it — you just haven't realised it yet.</p>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <span class="input-prompt">CODE &gt;</span>
+                <input id="codeInput" type="text" placeholder="ENTER OPERATION CODEWORD" autocomplete="off" spellcheck="false">
+                <button class="submit-btn" onclick="checkCode()">SUBMIT</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Boot sequence
+        window.addEventListener("load", function() {
+            var lines = document.querySelectorAll(".boot-line");
+            lines.forEach(function(line, i) {
+                setTimeout(function() {
+                    line.classList.add("show");
+                }, i * 400);
+            });
+            setTimeout(function() {
+                document.getElementById("trialPanel").classList.add("visible");
+            }, lines.length * 400 + 200);
+        });
+
+        var out = atob("aHR0cHM6Ly9wYXN0ZWJpbi5jb20vZ05GNTNQTmo=");
+
+        async function sha256(str) {
+            const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+
+        const CODE_HASH = "f54d666aef322fca3af5fab9c6427c620b2a74c36e0b82d73d81fb555985e8ac";
+
+        async function checkCode() {
+            var input = document.getElementById("codeInput");
+            var val = input.value.trim().toUpperCase();
+            var hash = await sha256(val);
+            if (hash === CODE_HASH) {
+                document.body.style.transition = "opacity 0.5s";
+                document.body.style.opacity = "0";
+                setTimeout(function() {
+                    window.location.href = out;
+                }, 500);
+            } else {
+                input.classList.add("denied");
+                input.value = "";
+                input.placeholder = "INCORRECT — RETRY";
+                setTimeout(function() {
+                    input.classList.remove("denied");
+                    input.placeholder = "ENTER OPERATION CODEWORD";
+                }, 1600);
+            }
+        }
+
+        document.getElementById("codeInput").addEventListener("keydown", function(e) {
+            if (e.key === "Enter") checkCode();
+        });
+    </script>
+</body>
+</html>
